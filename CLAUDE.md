@@ -37,14 +37,27 @@ cd backend
 ./gradlew build
 ```
 
-### Key dependencies (to be added as needed)
+### Dependencies (all in build.gradle.kts)
 - `spring-boot-starter-data-jpa` — JPA / Hibernate ORM
-- `spring-boot-starter-webmvc` — REST controllers
-- `spring-boot-starter-security` — Spring Security + JWT auth
-- PostgreSQL JDBC driver
-- Flyway — schema migrations
-- Lombok — boilerplate reduction (`@Data`, `@Builder`, etc.)
-- MapStruct — compile-time entity↔DTO mappers
+- `spring-boot-starter-web` — REST controllers
+- `spring-boot-starter-security` — Spring Security
+- `io.jsonwebtoken:jjwt-api/impl/jackson:0.12.6` — JWT
+- `org.postgresql:postgresql` — JDBC driver
+- `org.flywaydb:flyway-database-postgresql` — Flyway (Flyway 10+ PostgreSQL module)
+- `org.projectlombok:lombok` — `@Data`, `@Builder`, etc.
+- `org.mapstruct:mapstruct:1.6.3` — compile-time entity↔DTO mappers
+- `com.resend:resend-java:3.1.0` — transactional email (verify version on first build)
+
+### Backend package structure
+```
+application.backend/
+├── auth/          AuthController, AuthService, dto/
+├── config/        SecurityConfig
+├── entity/        JPA entities + enums (8 enums, 7 entities)
+├── exception/     GlobalExceptionHandler, ApiException
+├── repository/    Spring Data JPA repositories (7 interfaces)
+└── security/      JwtService, JwtAuthFilter, CurrentAgency, UserDetailsServiceImpl
+```
 
 ### Database
 - **PostgreSQL 16** (hosted on Railway)
@@ -96,17 +109,26 @@ npx shadcn@latest add <component-name>
 ```
 If the CLI fails (known issue with Tailwind v4 detection), copy components manually from [ui.shadcn.com](https://ui.shadcn.com/docs/components).
 
-### Key directories (to be created as features are built)
+### Frontend directory structure (current state)
 ```
 src/
-├── api/          Axios instance + typed API call functions
+├── api/
+│   ├── client.ts     Axios instance + JWT interceptor + setApiToken()
+│   └── auth.ts       authApi.login / authApi.register
 ├── components/
-│   └── ui/       shadcn/ui components
-├── hooks/        Custom React hooks
+│   ├── AppLayout.tsx  Sidebar layout (Dashboard / Buyers / Listings nav)
+│   └── ui/            shadcn/ui components (add as needed)
+├── context/
+│   └── AuthContext.tsx In-memory JWT state; useAuth() hook
+├── hooks/             Custom React hooks (add as needed)
 ├── lib/
-│   └── utils.ts  cn() helper (clsx + tailwind-merge)
-├── pages/        Route-level page components
-└── types/        Shared TypeScript types mirroring backend DTOs
+│   └── utils.ts       cn() helper (clsx + tailwind-merge)
+├── pages/
+│   ├── LoginPage.tsx
+│   ├── RegisterPage.tsx
+│   └── DashboardPage.tsx (placeholder)
+└── types/
+    └── auth.ts        AuthResponse, LoginRequest, RegisterRequest
 ```
 
 ---
@@ -136,17 +158,19 @@ src/
 
 ---
 
-## Core Features (build order)
+## Feature Build Status
 
-1. **Auth** — JWT login, agency registration
-2. **Buyer CRUD** — profiles with criteria + preferred locations
-3. **Listing CRUD** — property details + `ListingCreatedEvent` trigger
-4. **Matching Engine** — `MatchingService` listener, hard filters + soft scoring
-5. **Notification emails** — Resend integration, `NotificationLog`
-6. **Match action tracking** — PENDING → CONTACTED → VIEWING_SCHEDULED → DISMISSED
-7. **Dashboard** — stat cards, recent listings with match counts, cold buyer list
-8. **(Nice-to-have)** Retroactive match on new buyer add
-9. **(Nice-to-have)** Cold buyer alert — weekly scheduled email
+| # | Area | Features | Status |
+|---|------|----------|--------|
+| 1 | **Auth & Infrastructure** | US-001–003 · FT-001–007 — JWT auth, register/login endpoints + pages, Flyway migrations V1–V7, all JPA entities + repos | ✅ Done |
+| 2 | **Buyer Management** | US-004–010 · FT-008–016 — Buyer CRUD backend + frontend, multi-location input, buyer detail page | 🔲 Backlog |
+| 3 | **Listing Management** | US-011–015 · FT-017–025 — Listing CRUD backend + frontend, listing detail + match view | 🔲 Backlog |
+| 4 | **Matching Engine** | US-016–019 · FT-024–026 — ListingCreatedEvent, MatchingService (hard filters + scoring), match action PATCH | 🔲 Backlog |
+| 5 | **Notifications** | US-021–022 · FT-028–030 — Resend email dispatch, match email template, cross-agent logic | 🔲 Backlog |
+| 6 | **Dashboard** | US-024–026 · FT-032–034 — Metrics endpoint, dashboard page, cold buyers list | 🔲 Backlog |
+| 7 | **Nice-to-have** | US-020, US-023, US-027 · FT-027, FT-031 — Retroactive match, cold buyer digest, admin stats | 🔲 Backlog |
+
+> Feature planning tracked in `build-3-user-stories-and-features.xlsx` at repo root.
 
 ---
 
