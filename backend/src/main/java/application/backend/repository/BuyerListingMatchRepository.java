@@ -18,4 +18,6 @@ public interface BuyerListingMatchRepository extends JpaRepository<BuyerListingM
     long countByAgencyId(UUID agencyId);
 
     long countByAgencyIdAndAgentAction(UUID agencyId, AgentAction action);
+
+    long countByBuyerId(UUID buyerId);
 }
